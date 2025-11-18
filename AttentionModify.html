@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="个人博客，欢迎订阅更新科研上的记录文章，包括，代码实现方式，科研经验，欢迎交流">
-<meta property="og:type" content="article">
+<meta name="description" content="扩散模型的Attention修改代码研究 基本思路有两大思路 一个是修改AttnProcessor 另一个是直接修改Forward函数">
+<meta property="og:type" content="website">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://littlework.icu/2025/11/18/hello-world/index.html">
+<meta property="og:url" content="http://littlework.icu/AttentionModify.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="个人博客，欢迎订阅更新科研上的记录文章，包括，代码实现方式，科研经验，欢迎交流">
+<meta property="og:description" content="扩散模型的Attention修改代码研究 基本思路有两大思路 一个是修改AttnProcessor 另一个是直接修改Forward函数">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-18T06:57:27.566Z">
-<meta property="article:modified_time" content="2025-11-18T09:23:10.661Z">
+<meta property="article:published_time" content="2025-11-18T09:26:22.115Z">
+<meta property="article:modified_time" content="2025-11-18T09:26:22.102Z">
 <meta property="article:author" content="LittleWork123">
 <meta name="twitter:card" content="summary">
 
@@ -119,7 +119,7 @@
 
 
 
-  <link rel="canonical" href="http://littlework.icu/2025/11/18/hello-world/"/>
+  <link rel="canonical" href="http://littlework.icu/AttentionModify.html"/>
 
 
 
@@ -250,122 +250,37 @@
 
   <div id="posts" class="posts-expand">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://littlework.icu/2025/11/18/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
+    
+    <div class="post-block page">
       <header class="post-header">
 
-        
-        
-          <h1 class="post-title" itemprop="name headline"></h1>
-        
+	<h1 class="post-title" itemprop="name headline"></h1>
 
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-18T14:57:27+08:00">
-                2025-11-18
-              </time>
-            
 
-            
 
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</header>
 
       
       
-
       
-        <h1 id="个人博客，欢迎订阅"><a href="#个人博客，欢迎订阅" class="headerlink" title="个人博客，欢迎订阅"></a>个人博客，欢迎订阅</h1><p>更新科研上的记录文章，包括，代码实现方式，科研经验，欢迎交流</p>
+      <div class="post-body">
+        
+        
+          <p>扩散模型的Attention修改代码研究</p>
+<h1 id="基本思路"><a href="#基本思路" class="headerlink" title="基本思路"></a>基本思路</h1><p>有两大思路</p>
+<p>一个是修改AttnProcessor</p>
+<p>另一个是直接修改Forward函数</p>
 
+        
+      </div>
+      
+      
       
     </div>
     
     
     
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
   </div>
 
 
@@ -460,7 +375,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2%EF%BC%8C%E6%AC%A2%E8%BF%8E%E8%AE%A2%E9%98%85"><span class="nav-number">1.</span> <span class="nav-text">个人博客，欢迎订阅</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%80%9D%E8%B7%AF"><span class="nav-number">1.</span> <span class="nav-text">基本思路</span></a></li></ol></div>
             
 
           </div>
