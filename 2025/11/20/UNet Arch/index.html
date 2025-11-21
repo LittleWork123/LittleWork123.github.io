@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Diffusion,UNet," />
 
 
 
@@ -79,12 +79,18 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://littlework.icu/archives/2025/index.html">
+<meta name="description" content="扩散模型中U-net的不同网络层会分工吗?文生图扩散模型中U-Net的不同网络层会分工吗?1 U-Net的深浅层跟生成图像不同属性有关◆先说结论，低分辨率特征通常负责全局构图与语义，中间层负责物体关系与局部结构，高分辨率 decoder、skip connection主要与恢复高频信息有关。2 从DDPM到LDM:现有工作是怎么揭示这些规律的?◆DDPM最初利用 U-net的结构，在前向过程中把干">
+<meta property="og:type" content="article">
+<meta property="og:title" content="U-Net 架构研究">
+<meta property="og:url" content="http://littlework.icu/2025/11/20/UNet%20Arch/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="扩散模型中U-net的不同网络层会分工吗?文生图扩散模型中U-Net的不同网络层会分工吗?1 U-Net的深浅层跟生成图像不同属性有关◆先说结论，低分辨率特征通常负责全局构图与语义，中间层负责物体关系与局部结构，高分辨率 decoder、skip connection主要与恢复高频信息有关。2 从DDPM到LDM:现有工作是怎么揭示这些规律的?◆DDPM最初利用 U-net的结构，在前向过程中把干">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2025-11-20T09:26:01.581Z">
 <meta property="article:author" content="LittleWork123">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="UNet">
 <meta name="twitter:card" content="summary">
 
 
@@ -115,13 +121,13 @@
 
 
 
-  <link rel="canonical" href="http://littlework.icu/archives/2025/"/>
+  <link rel="canonical" href="http://littlework.icu/2025/11/20/UNet Arch/"/>
 
 
 
 
 
-  <title>Archive | Hexo</title>
+  <title>U-Net 架构研究 | Hexo</title>
   
 
 
@@ -140,7 +146,7 @@
     
   
 
-  <div class="container sidebar-position-left page-archive">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -244,185 +250,153 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
+  <div id="posts" class="posts-expand">
+    
 
-      <span class="archive-page-counter">
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://littlework.icu/2025/11/20/UNet%20Arch/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
         
         
+          <h1 class="post-title" itemprop="name headline">U-Net 架构研究</h1>
         
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-20T00:00:00+08:00">
+                2025-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
           
-        
-        Um..! 4 posts in total. Keep on posting.
-      </span>
 
-      
-
-        
-        
-        
-
-        
           
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2025">2025</h1>
-          </div>
-        
-        
+            
+          
 
-        
+          
+          
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+          
 
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2025/11/25/Image%20Edit/" itemprop="url">
-              
-                <span itemprop="name">Image Edit</span>
-              
-            </a>
-        
-      </h2>
+          
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2025-11-25T00:00:00+08:00"
-              content="2025-11-25" >
-          11-25
-        </time>
-      </div>
+          
 
-    </header>
-  </article>
+        </div>
+      </header>
+    
 
-
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2025/11/20/UNet%20Arch/" itemprop="url">
-              
-                <span itemprop="name">U-Net 架构研究</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2025-11-20T00:00:00+08:00"
-              content="2025-11-20" >
-          11-20
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
       
 
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2025/11/18/AttentionModify/" itemprop="url">
-              
-                <span itemprop="name">扩散模型的Attention修改代码研究</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2025-11-18T00:00:00+08:00"
-              content="2025-11-18" >
-          11-18
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
+      
+        <p>扩散模型中U-net的不同网络层会分工吗?<br>文生图扩散模型中U-Net的不同网络层会分工吗?<br>1 U-Net的深浅层跟生成图像不同属性有关◆先说结论，低分辨率特征通常负责全局构图与语义，中间层负责物体关系与局部结构，高分辨率 decoder、skip connection主要与恢复高频信息有关。<br>2 从DDPM到LDM:现有工作是怎么揭示这些规律的?◆DDPM最初利用 U-net的结构，在前向过程中把干净图像加噪到近似噪声，反向过程使用U-Net在每一步预测应当去除的噪声，各个尺度的特征在不同空间粒度上决定了，当前的timestep应该恢复哪些内容。<br>◆以 Stable Diffusion为代表的LDM中，低分辨率特征图上的cross-attention负责把整个text prompt的语义分配给粗粒度的空间区域;高分辨率上的cross-attention则为局部区域进一步添加细节。<br>Prompt-to-Prompt发现在深层低分辨率保持原图注意力时，整体构图和物体位置是几乎不变的。DAAM 通过累积各层各步的cross-attention得分，为每个词构建像素级的heatmap，展示了不同分辨率层在token-to-pixel的关联度。<br>◆Attend-and-Excite在采样过程中针对注意力不足的token动态放大响应，旨在修复提示中物体、属性泯灭的问题，实验结果也显示低分辨率层更容易影响物体是否出现。<br>3 Skip Connection、高频细节与可控生成<br>在完整的U-net中，skip connection主要负责向decoder输送高频信息的关键作用。具体来说，FreeU等工作通过重新加权U-net backbone与skip connection特征，印证了一个结论:纹理、边缘细节主要集中在decoder与skip connection中，而全局视角上的语义更多由低分辨率层决定。<br>◆从可控生成的角度来看，ControlNet使用的是U-netencoder的一份copy，加上前面说到的Prompt-to-Prompt，都指向:低分辨率网络层与生成过程的spatial constraint有关。</p>
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2025/11/17/hello-world/" itemprop="url">
-              
-                <span itemprop="name">Hello World</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2025-11-17T00:00:00+08:00"
-              content="2025-11-17" >
-          11-17
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
     </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Diffusion/" rel="tag"># Diffusion</a>
+          
+            <a href="/tags/UNet/" rel="tag"># UNet</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/18/AttentionModify/" rel="next" title="扩散模型的Attention修改代码研究">
+                <i class="fa fa-chevron-left"></i> 扩散模型的Attention修改代码研究
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/25/Image%20Edit/" rel="prev" title="Image Edit">
+                Image Edit <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -430,6 +404,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -635,6 +613,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
