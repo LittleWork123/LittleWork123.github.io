@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIDE: Task-Isolated Diffusion for Unified Video Editing and Generation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --bg: #ffffff;
+            --bg-alt: #f8fafc;
+            --bg-card: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.04);
+            --radius: 12px;
+            --max-width: 1400px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+            color: white;
+            padding: 80px 20px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 80%, rgba(99,102,241,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .hero-content { position: relative; z-index: 1; max-width: var(--max-width); margin: 0 auto; }
+
+        .venue-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-family: 'Noto Serif', Georgia, serif;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .hero h1 .tide-highlight {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero .subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            opacity: 0.85;
+            margin-bottom: 28px;
+            font-weight: 300;
+        }
+
+        .authors {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 6px;
+            font-weight: 400;
+        }
+        .authors a { color: white; text-decoration: none; }
+        .authors a:hover { text-decoration: underline; }
+        .authors sup { font-size: 0.7em; margin-left: 1px; }
+
+        .affiliations {
+            font-size: 0.9rem;
+            opacity: 0.75;
+            margin-bottom: 30px;
+        }
+        .affiliations sup { font-size: 0.7em; margin-right: 2px; }
+
+        .hero-links { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .hero-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary);
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline {
+            background: rgba(255,255,255,0.08);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.15); }
+
+        /* ===== Sections ===== */
+        .section {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+        .section-alt { background: var(--bg-alt); }
+        .section-alt .section { padding: 60px 24px; }
+
+        .section-title {
+            font-family: 'Noto Serif', Georgia, serif;
+            font-size: 1.85rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 40px;
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== Abstract ===== */
+        .abstract-text {
+            font-family: 'Noto Serif', Georgia, serif;
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: #374151;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+
+        /* ===== Method Figure ===== */
+        .method-figure {
+            max-width: 80%;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .method-figure-wrapper {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .method-caption {
+            margin-top: 14px;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* ===== Card Grid ===== */
+        .case-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        /* Portrait grid: more columns since cards are narrower */
+        .case-grid-portrait {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .case-grid-portrait .case-card[data-orientation="portrait"] .video-compare {
+            aspect-ratio: 704/1280;
+        }
+        @media (max-width: 1400px) { .case-grid-portrait { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 1200px) {
+            .case-grid { grid-template-columns: repeat(3, 1fr); }
+            .case-grid-portrait { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .case-grid { grid-template-columns: repeat(2, 1fr); }
+            .case-grid-portrait { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .case-grid { grid-template-columns: 1fr; }
+            .case-grid-portrait { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .case-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: box-shadow 0.25s, transform 0.25s;
+        }
+        .case-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .case-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px 6px;
+        }
+        .case-card .card-header .badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-edit { background: #dbeafe; color: #1d4ed8; }
+        .badge-ref-edit { background: #fce7f3; color: #be185d; }
+        .badge-s2v { background: #d1fae5; color: #065f46; }
+        .badge-gen { background: #d1fae5; color: #065f46; }
+
+        .score-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            margin-left: 6px;
+        }
+        .score-dims {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .ref-images-row {
+            display: flex;
+            gap: 6px;
+            padding: 6px 8px;
+            background: #f1f5f9;
+            border-top: 1px solid var(--border);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .ref-images-row img {
+            flex: 1 1 0;
+            min-width: 40px;
+            max-width: 120px;
+            height: auto;
+            max-height: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #e2e8f0;
+        }
+
+        .card-header .score {
+            font-size: 0.78rem;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .card-header .score i { margin-right: 3px; }
+
+        /* ===== Video Comparison Slider ===== */
+        .video-compare {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            cursor: col-resize;
+            background: #000;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .case-card[data-orientation="landscape"] .video-compare { aspect-ratio: 1280/704; }
+        .case-card[data-orientation="portrait"] .video-compare { aspect-ratio: 704/1280; }
+
+        /* Bottom layer: result video, fills entire container */
+        .video-compare .layer-result {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Top layer: source wrapper with overflow hidden, controls visible width */
+        .video-compare .source-wrapper {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 2;
+        }
+        /* Source video inside wrapper: must match full container width, not wrapper width */
+        .video-compare .source-wrapper video {
+            display: block;
+            width: 100%;     /* will be overridden by JS to container width */
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Slider line */
+        .video-compare .slider-line {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 3px;
+            background: rgba(255,255,255,0.95);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
+
+        /* Slider handle */
+        .video-compare .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            z-index: 11;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            pointer-events: none;
+        }
+        .slider-handle i {
+            font-size: 11px;
+            color: #333;
+        }
+
+        /* Labels */
+        .video-compare .label-input,
+        .video-compare .label-output {
+            position: absolute;
+            top: 8px;
+            z-index: 12;
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .video-compare .label-input { left: 8px; }
+        .video-compare .label-output { right: 8px; }
+
+        /* ===== Single Video (S2V) ===== */
+        .single-video-wrap {
+            position: relative;
+            width: 100%;
+            background: #000;
+            aspect-ratio: 1280/704;
+        }
+        .single-video-wrap video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== Reference Images ===== */
+        .ref-strip {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .ref-strip .ref-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+            margin-right: 2px;
+        }
+        .ref-strip img {
+            height: 48px;
+            width: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* ===== Card Body ===== */
+        .card-body {
+            padding: 8px 14px 14px;
+        }
+        .card-body .prompt-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ===== BibTeX ===== */
+        .bibtex-wrapper {
+            position: relative;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .bibtex-code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 24px 28px;
+            border-radius: var(--radius);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* ===== Footer ===== */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+        footer a { color: var(--primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ===== Utility ===== */
+        .mt-20 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+    <div class="hero-content">
+        <h1><span class="tide-highlight">TIDE</span>: Task-Isolated Diffusion for<br>Unified Video Editing and Generation</h1>
+        <p class="subtitle">A single diffusion model for instruction editing, reference-guided editing, and subject-driven generation</p>
+
+        <p class="authors">
+            <a href="#">Qi Liu</a><sup>1,*</sup>,
+            <a href="#">Gang Yue</a><sup>2,*</sup>,
+            <a href="#">Mingyu Yin</a><sup>2</sup>,
+            <a href="#">Lisai Zhang</a><sup>2</sup>,
+            <a href="#">Yidi Wu</a><sup>2</sup>,
+            <a href="#">Yaole Wang</a><sup>2</sup>,
+            <a href="#">Yaohui Wang</a><sup>2</sup>,
+            <a href="#">Chang Yao</a><sup>1</sup>,
+            <a href="#">Jingyuan Chen</a><sup>1,†</sup>,
+            <a href="#">Lin Ma</a><sup>†</sup>
+        </p>
+        <p class="affiliations">
+            <sup>1</sup>Zhejiang University&emsp;
+            <sup>2</sup>Bilibili Inc.<br>
+            <small><sup>*</sup>Equal contribution&emsp;<sup>†</sup>Corresponding author</small>
+        </p>
+
+        <div class="hero-links">
+            <a href="https://arxiv.org/pdf/2606.08260" class="btn-primary"><i class="fas fa-file-pdf"></i> Paper</a>
+            <a href="https://github.com/LittleWork123/TIDE" class="btn-outline"><i class="fab fa-github"></i> Code</a>
+            <a href="#" class="btn-outline"><i class="fas fa-database"></i> Data</a>
+        </div>
+    </div>
+</section>
+
+<!-- ============ ABSTRACT ============ -->
+<div class="section-alt">
+<section class="section" id="abstract">
+    <h2 class="section-title">Abstract</h2>
+    <p class="section-subtitle"></p>
+    <p class="abstract-text">
+        Recent advances in Diffusion Transformers have driven rapid progress in video generation and editing, yet these capabilities are still handled by separate, task-specific models. Building a unified framework that supports diverse video tasks remains an open challenge: existing unified attempts either require dedicated auxiliary encoders or lack explicit mechanisms to distinguish heterogeneous conditioning tokens, struggling when the number and type of visual conditions vary across tasks. We propose <strong>TIDE</strong>, a unified framework that integrates instruction-based editing, reference-guided editing, and multi-reference generation. At its core, we introduce <em>per-token task embeddings</em> that assign each input token a task-specific identifier, enabling the model to explicitly disambiguate target, source, and reference tokens. To simultaneously capture high-level semantic understanding and fine-grained structural fidelity, we design a <em>dual-path conditioning scheme</em> that couples a vision-language model with a VAE latent path for complementary signals. We further devise a <em>multi-task progressive training strategy</em> that incrementally introduces tasks of increasing complexity, effectively harmonizing diverse objectives and enabling smooth generalization across heterogeneous task distributions. Extensive experiments on multiple video editing and generation benchmarks demonstrate that TIDE achieves state-of-the-art performance across all evaluated tasks.
+    </p>
+</section>
+</div>
+
+<!-- ============ METHOD ============ -->
+<section class="section" id="method">
+    <h2 class="section-title">Method Overview</h2>
+    <p class="section-subtitle">TIDE unifies video editing and generation through per-token task embeddings and dual-path conditioning.</p>
+    <div class="method-figure-wrapper">
+        <img src="static/images/method_overview.png" alt="TIDE method overview" class="method-figure">
+    </div>
+    <p class="method-caption">Figure: Overview of the TIDE framework. Per-token task embeddings isolate target, source, and reference roles within shared attention layers, enabling a single model to handle editing and generation tasks seamlessly.</p>
+</section>
+
+<!-- ============ SECTION 1: Instruction-Based Editing ============ -->
+<div class="section-alt">
+<section class="section" id="editing">
+    <h2 class="section-title">Instruction-Based Video Editing</h2>
+    <p class="section-subtitle">Drag the slider to compare input and output.</p>
+    <div class="case-grid">
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000002.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000002.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a Cyberpunk animation style featuring flickering neon signs, rain-slicked streets with holographic reflections, and a gritty urban backdrop.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000006.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000006.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a Studio Ghibli animation style with its distinctive artistic flair.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000008.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000008.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a watercolor animation style with fluid color transitions, soft outlines, and a dreamlike atmosphere.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000011.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000011.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a pixel art style with sharp, retro-style pixels and a cohesive color palette to emulate classic pixel animations.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000025.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000025.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a dawn aesthetic with a soft, warm ambiance, gradual light transitions, and pastel sky tones.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000033.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000033.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a classic cartoon aesthetic with a vivid color scheme and exaggerated character movements.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000052.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000052.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Apply a Chinese Ink Wash Painting style featuring animated ink smudging, blended textures, and a soft, ethereal glow.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000070.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000070.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the man's green t-shirt with a dark navy blue business suit, white shirt, and burgundy tie, keeping his position and pose unchanged.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000075.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000075.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the smooth white table with a luxurious marble surface table while maintaining its original position and pose.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000083.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000083.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the sofa with a classic brown leather sofa with visible stitching, maintaining its exact position and pose.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000094.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000094.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the young girl's winter sweater and skirt with a light, sleeveless pastel summer dress while maintaining her seated position and pose.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000096.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000096.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the woman in the denim jacket with an elderly woman with silver hair and gentle wrinkles, maintaining her original position and pose.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Local Change</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000097.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000097.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the man's orange astronaut suit with a light blue short-sleeve shirt and beige shorts, maintaining his seated pose and position.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Background</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000149.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000149.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the background with a dynamic cozy lounge featuring a flickering fireplace, moving wall shadows, and a soft ambient glow. Keep the subject perfectly still.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Background</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000143.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000143.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the background with a modern conference room featuring sunlight streaming through glass walls, moving shadows, and shimmering reflections, while keeping the subject still.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Background</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000136.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000136.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the background with a dynamic classic car showroom featuring subtle reflections on polished surfaces and gently flickering overhead lights. Keep the subject and car interior perfectly still.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Background</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000148.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000148.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Replace the background with a dynamic ship's command bridge featuring ocean waves through the windows and blinking navigation lights. The subject must remain perfectly still.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000310.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000310.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the clouds into a sprawling futuristic cityscape composed of gleaming glass and steel towers with visible streets and lights.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000314.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000314.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the man's hands into sleek, metallic robotic hands with articulated joints and glowing blue lights while maintaining the original typing motion.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000323.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000323.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the white corrugated walls into towering bookshelves filled with colorful books. Replace the framed pictures with ornate reading lamps emitting warm light and adjust the floor reflections to mirror the golden glow.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000327.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000327.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the paddleboarder into a glowing ethereal water guardian. Make the water sparkle with bioluminescent waves, add glowing mythical water creatures, and replace the sun with a large luminous moon casting a mystical glow.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000309.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000309.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the bread loaf into a miniature lush forest with green trees, moss, and tiny flowers, while keeping the knife poised to slice through the forest canopy.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000266.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000266.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Overlay an animated black metal music stand to the right of the seated man holding the guitar, ensuring it remains fixed to the man as the camera moves.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000202.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000202.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the neon green "DON'T PANIC!" text from the tablet, inpainting the background to match the surroundings.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000223.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000223.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the elegant orchid with its slender stem, delicate pink blossoms, and vibrant green leaves from the entire sequence, reconstructing the background in its place.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000203.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000203.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the white flower with four ruffled petals and a pale yellow central core, reconstructing the background in its place.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000212.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000212.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the small bird with glossy black plumage and a yellow beak from the entire video, reconstructing the background.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Subtitle</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000381.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000381.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the subtitles located at the top of the video.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Subtitle</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000385.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000385.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the subtitles at the bottom of the video.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Subtitle</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000391.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000391.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the subtitles at the bottom of the video.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Subtitle</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000399.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000399.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the subtitles located at the center of the frame.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-edit">Subtitle</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000417.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000417.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Remove the subtitles located at the center of the frame.</p></div>
+        </div>
+    </div>
+    <div class="case-grid-portrait">
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-edit">Background</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000176.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000176.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Change the background to a modern art gallery with soft ambient lighting, polished floors with subtle reflections, distant visitors, and dynamic light shifts from overhead spotlights.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-edit">Creative</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/openve_res/000322.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/openve_src/000322.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Edit Video-1. Transform the person into a stylized 3D digital avatar with a translucent visor replacing the VR headset. Change the background to a digital grid environment with floating data streams and neon accents.</p></div>
+        </div>
+    </div>
+
+</section>
+</div>
+
+<!-- ============ SECTION 2: Reference-Guided Editing ============ -->
+<section class="section" id="ref-editing">
+    <h2 class="section-title">Reference-Guided Video Editing</h2>
+    <p class="section-subtitle">Reference images guide the edit; drag the slider to compare.</p>
+    <div class="case-grid">
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_add_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000116.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000116.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000116_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000116_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Add the lush green potted fiddle-leaf fig plant from Image-1 to the empty left corner of the room in Video-1. Place the beige, round, fabric-covered meditation cushion from Image-2 directly underneath the woman in the video, so she is sitting centered on top of it.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_add_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000117.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000117.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000117_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000117_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Add the potted green basil plant from Image-1 to the far right corner of the wooden kitchen counter in Video-1. Place the rectangular wooden cutting board from Image-2 flat on the center of the kitchen counter, directly in front of the man.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_add_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000124.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000124.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000124_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Add the black cylindrical speaker from Image-1 to the far back corner of the room, positioned on the floor near the right side of the wall. Remove the large arched window located on the back wall in the center of Video-1, replacing that area with a plain white wall surface that matches the surrounding room texture.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000006.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000006.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000006_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the existing dark, plain background of Video-1 with the interior of the Roman Colosseum depicted in Image-1. Ensure the new background includes the sandy arena floor, the ancient tiered stone arches, and the blue sky to create a historic architectural atmosphere behind the two performers.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000000.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000000.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000000_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the sandy beach background of Video-1 with the modern podcast studio from Image-1, featuring a large wooden desk, microphones, acoustic wall panels, and sleek LED lighting. Ensure the two surfers in their wetsuits remain in the foreground, seamlessly integrated into the new indoor environment as if walking through the studio.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000010.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000010.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000010_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the entire nighttime city street background of Video-1 with the vast salt flats shown in Image-1. Ensure the cracked white salt surface, the distant mirror-like water reflecting the sky, and the bright cloudy sky seamlessly integrate behind the people currently standing in the foreground, maintaining the perspective of the expansive landscape.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000047.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000047.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000047_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000047_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the existing forest trail background in Video-1 with the desert scene featuring the Pyramids of Giza under a clear blue sky from Image-1. Add the bright orange backpack rain cover from Image-2 over the blue backpack worn by the person in the center of the frame, ensuring it snugly covers the rear portion of the backpack.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000052.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000052.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000052_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000052_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the existing architectural stairwell background in Video-1 with the park featuring a large green lawn, trees, and the Eiffel Tower under a golden sunset sky shown in Image-1. Add the minimalist black floor lamp from Image-2 to the left side of the frame, positioning it on the grass next to the man playing the guitar so that it stands vertically.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000072.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000072.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000072_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the existing gymnasium background of Video-1 with the wooden pier overlooking the water and the Sydney Opera House from Image-1, maintaining the foreground trampoline and the person jumping. Remove the brown leather pommel horse located in the center background of the gymnasium.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000101.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000101.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000101_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000101_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the existing outdoor forest background in Video-1 with the large Mayan pyramid in a grassy plaza under a clear blue sky from Image-1. Replace the wooden signpost located on the right side of the hiking trail in Video-1 with the modern stainless steel trail map kiosk shown in Image-2, ensuring it is positioned firmly in the ground where the original sign stood.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000091.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000091.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000091_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000091_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the entire background of Video-1, including the white walls and windows, with the modern penthouse loft with hardwood floors, a marble fireplace, and large floor-to-ceiling windows overlooking the New York City skyline from Image-1. Additionally, replace the large rectangular mirror located on the left wall with the sleek, black, flat-screen television from Image-2, ensuring the TV is mounted in the same position and orientation as the original mirror.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000210.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000210.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000210_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Apply the low-poly 3D geometric art style of Image-1 to Video-1, characterized by flat-shaded triangular facets, geometric simplification, angular surfaces, and minimal color gradients within each polygon. It is essential to preserve the original motion of the street performer, the musical instruments, and the entire spatial composition.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000209.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000209.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000209_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Style Video-1 as a soft watercolor painting based on Image-1, showcasing translucent washes, bleeding edges, soft gradients, visible brush strokes, and delicate color blending. All original motion of the man fishing by the lake, along with the subjects and spatial composition, must remain unchanged.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">Style Transfer</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000202.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000202.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000202_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Apply the pointillism painting style of Image-1 to Video-1, using tiny distinct dots of color, optical color mixing, a vibrant mosaic-like texture, and systematic dot patterns. It is crucial to maintain the original motion of the basketball player, the outdoor court, and the entire spatial composition.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">0ref_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000033.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000033.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Remove the blue-tinted, three-columned potted cactus located at the center front of the white desk in Video-1. Ensure the surface of the white desk is seamlessly filled in where the brown terracotta pot previously sat.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">0ref_remove_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000164.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000164.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Remove the weathered brown wooden signpost located on the right side of the hiking trail in Video-1. Additionally, remove the blue water bottle tucked into the side pocket of the blue backpack worn by the hiker in the center of Video-1.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">0ref_remove_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000165.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000165.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Remove the clear glass beaker positioned at the front left of the desk in Video-1. Additionally, remove the transparent acrylic test tube rack containing colorful liquids located on the left side of the desk, corresponding to.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">0ref_remove_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000168.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000168.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Remove the pile of broken concrete debris located at the bottom left foreground of Video-1. Additionally, remove the yellow taxi car positioned in the background on the right side of the street.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_remove_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000178.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000178.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000178_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Remove all the vertical brown wooden posts lining both sides of the boardwalk in Video-1. Replace the entire wooden plank boardwalk surface with the grey, irregular stone tile texture shown in Image-1, ensuring the new path maintains the same winding shape and perspective as the original walkway.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_remove_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000184.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000184.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000184_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Remove the cyclist positioned on the left side of the road in Video-1. Replace the black windbreaker worn by the central cyclist with the bright neon yellow short-sleeved cycling jersey shown in Image-1, ensuring the new jersey maintains the same fit and follows the rider's posture.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000028.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000028.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000028_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the black and white patterned hat worn by the man in Video-1 with the solid brown fedora shown in Image-1. The new brown fedora should maintain the same position on the man's head, covering his hair, and match the size and brim style of the original hat.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_replace_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000154.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000154.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000154_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000154_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the man's gray and white horizontally striped sweater in Video-1 with the beige linen shirt shown in Image-1, maintaining the same fit and seated posture. Simultaneously, replace the boy's solid blue long-sleeved shirt in Video-1 with the bright yellow hoodie from Image-2, ensuring the hood and sleeves match the boy's current position on the wooden dock.</p></div>
+        </div>
+    </div>
+    <div class="case-grid-portrait">
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000017.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000017.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000017_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Add the beige, rectangular, textured floor rug from Image-1 underneath the black wooden chair in Video-1. The rug should be positioned flat on the dark wood floor, centered beneath the chair's legs, covering the area directly under the seating space.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_add_add_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000198.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000198.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000198_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000198_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Remove the dark brown wooden side table located on the left side of Video-1. Add the potted fiddle-leaf fig plant from Image-1 to the floor space where the side table was previously positioned, next to the chair. Hang the minimalist framed abstract wall art from Image-2 on the empty white wall behind the woman, centering it horizontally above her head.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000003.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000003.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000003_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the entire indoor living room background of Video-1 with the snowy field at night under bright green aurora borealis depicted in Image-1. Ensure the woman from Video-1 remains in the foreground, maintaining her seated position on the ground while her surroundings are seamlessly transitioned into the vast snow-covered landscape with distant mountains and pine trees under a spectacular starry sky.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000007.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000007.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000007_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the plain white wall background of Video-1 with the misty view of the Taj Mahal and its reflecting pool from Image-1. Ensure the new background is seamlessly integrated behind the chair and the side table, maintaining the original lighting and perspective of the scene.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_add_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000190.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000190.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000190_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000190_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the plain white wall background of Video-1 with the dusty wild west town scene with wooden buildings like a saloon and hotel from Image-1. Remove the potted snake plant located in the wicker basket on the right side of the frame. Add the sleek black floor lamp from Image-2 into the right corner of the room, positioning it upright on the floor where the plant was previously located.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000065.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000065.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000065_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the current solid dark blue background in Video-1 with the alien glowing forest scene from Image-1, featuring trees with glowing cyan leaves and pinkish trunks under a starry night sky. Remove the silver hoop earring with the white teardrop pearl pendant currently worn on the subject's ear, ensuring the earlobe appears natural and free of jewelry.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000099.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000099.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/tide_ref/000099_ref0.png" alt="ref" loading="lazy"><img src="videos/tide_ref/000099_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the entire living room background of Video-1 with the scene of the Taj Mahal with a reflecting pool and hazy warm light from Image-1, maintaining the subject's position in the foreground. Replace the large abstract painting hanging on the wall behind the sofa with the framed green fern botanical print shown in Image-2, ensuring it is centered on the wall.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="portrait">
+            <div class="card-header"><span class="badge badge-ref-edit">0ref_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/tide_res/000034.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/tide_src/000034.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            
+            <div class="card-body"><p class="prompt-text">Remove the small green potted plant sitting on the white kitchen counter in the background of Video-1, as specified in. Ensure the area where the plant was located is seamlessly filled with the same white countertop and cabinet finish visible behind it.</p></div>
+        </div>
+    </div>
+
+</section>
+
+<!-- ============ SECTION 3: Showcase Editing ============ -->
+<div class="section-alt">
+<section class="section" id="showcase">
+    <h2 class="section-title">Showcase: Complex Multi-Reference Editing</h2>
+    <p class="section-subtitle">Complex editing with multiple reference images for background replacement, object addition, and removal.</p>
+    <div class="case-grid">
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">1ref_bg_remove</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/showcase_res/000003.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/showcase_src/000003.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/showcase_ref/000003_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the entire city street background of Video-1 with the snowy field at night under bright green aurora borealis from Image-1, with distant mountains and pine trees under a starry sky. Remove the white tote bag from the woman's left shoulder on the left side of the frame. Ensure all three people remain in the foreground with their walking motion preserved, seamlessly integrated into the new arctic night environment.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/showcase_res/000009.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/showcase_src/000009.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/showcase_ref/000009_ref0.png" alt="ref" loading="lazy"><img src="videos/showcase_ref/000009_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the modern city street background of Video-1 with the dusty Wild West town street lined with wooden saloon and hotel buildings from Image-1. Replace the dark gray button-up shirt worn by the middle man with the red and black buffalo plaid flannel shirt from Image-2, preserving his white undershirt, jeans, backpack, and walking posture.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_add</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/showcase_res/000018.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/showcase_src/000018.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/showcase_ref/000018_ref0.png" alt="ref" loading="lazy"><img src="videos/showcase_ref/000018_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the indoor living room background of Video-1 with the vast Uyuni salt flats under a bright sky from Image-1. Add the red Santa Claus hat with white fluffy trim from Image-2 onto the head of the woman sitting in the middle, fitting naturally with her long black hair and seated posture. All clothing remains unchanged.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/showcase_res/000034.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/showcase_src/000034.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/showcase_ref/000034_ref0.png" alt="ref" loading="lazy"><img src="videos/showcase_ref/000034_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the beach and lighthouse background of Video-1 with the vast Uyuni salt flats reflecting sky and clouds from Image-1. Replace the right woman's white top and dark floral skirt with the bright yellow sleeveless sundress from Image-2, keeping her red curly hair and relaxed pose on the blanket.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-ref-edit">2ref_bg_replace</span></div>
+            <div class="video-compare">
+                <video class="layer-result" muted loop playsinline preload="none"><source src="videos/showcase_res/000042.mp4" type="video/mp4"></video>
+                <div class="source-wrapper"><video muted loop playsinline preload="none"><source src="videos/showcase_src/000042.mp4" type="video/mp4"></video></div>
+                <div class="slider-line"></div>
+                <div class="slider-handle"><i class="fas fa-arrows-left-right"></i></div>
+                <span class="label-input">Input</span><span class="label-output">Output</span>
+            </div>
+            <div class="ref-images-row"><img src="videos/showcase_ref/000042_ref0.png" alt="ref" loading="lazy"><img src="videos/showcase_ref/000042_ref1.png" alt="ref" loading="lazy"></div>
+            <div class="card-body"><p class="prompt-text">Replace the winter city street background of Video-1 with the vast Uyuni salt flats reflecting the sky from Image-1. Replace the middle man's gray houndstooth blazer with the burgundy velvet blazer from Image-2, keeping his navy turtleneck and black beret.</p></div>
+        </div>
+    </div>
+
+</section>
+</div>
+
+<!-- ============ SECTION 4: Subject-Driven Generation ============ -->
+<section class="section" id="s2v">
+    <h2 class="section-title">Subject-Driven Video Generation</h2>
+    <p class="section-subtitle">Given reference images, generate a video depicting the subjects.</p>
+    <div class="case-grid">
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">humanobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/humanobj_1_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_1_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_1_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/humanobj_1.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">a man feeding a bird in the park.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">humanobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/humanobj_8_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_8_ref1.png" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_8_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/humanobj_8.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">a man sitting in the office, a cat sitting beside him.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">humanobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/humanobj_14_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_14_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/humanobj_14_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/humanobj_14.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">a man sitting on the grass in the park, a dog walking around him.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiface</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiface_1_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiface_1_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiface_1_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiface_1.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video depicts an indoor scene where two individuals are engaged in a conversation. The setting appears to be a well-lit room with natural light streaming through large windows. The room is furnished with a wheelchair positioned near the back, suggesting it might be a medical or care facility. A desk with a laptop and some other items is visible on the right side of the frame.  The person on the left, dressed in a gray uniform, is holding a tablet and gesturing with her hands while speaking. Her posture indicates she is explaining something, possibly related to the tablet's content. The individual on the right, wearing a light-colored robe, is seated and listening attentively, smiling slightly, which suggests a positive interaction.  The camera remains static throughout the sequence, focusing on capturing the interaction between the two individuals. There is no noticeable camera movement such as panning or zooming. The overall atmosphere seems calm and professional, with the focus on the exchange between the two people.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiface</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiface_5_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiface_5_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiface_5.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video captures two individuals taking a selfie together in an indoor setting. The man is holding a smartphone with his right hand extended forward, capturing the photo. He is dressed in a light gray blazer over a white shirt. The woman beside him has long blonde hair and is wearing a white top. Both are smiling broadly, appearing cheerful and engaged in the moment.  The background suggests they are in a modern office or a similar professional environment, with a mix of neutral tones and greenery visible behind them. The lighting is bright and even, likely from overhead fluorescent lights, which illuminates the scene clearly without harsh shadows.  As the video progresses, there is minimal change in the positioning of the subjects. They maintain their close proximity and continue to smile at the camera. The man's arm remains steady, holding the phone at arm's length, while the woman slightly adjusts her position to ensure she is within the frame. The overall atmosphere conveys a sense of camaraderie and lightheartedness.  The camera remains static throughout the sequence, focusing on the two individuals as they pose for the selfie. There is no noticeable panning, tilting, or zooming, keeping the framing consistent and centered on the subjects. The video captures a candid and joyful moment shared between the two individuals.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiface</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiface_11_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiface_11_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiface_11_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiface_11.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video depicts two individuals sitting closely on a beige couch covered with a matching beige slipcover. The man is seated on the left side, wearing a maroon t-shirt and blue jeans, while the woman sits beside him, dressed in a purple plaid shirt and dark blue jeans. She has her arm around his shoulder, suggesting a friendly or intimate relationship.  The man is focused on a silver laptop placed on his lap, occasionally moving his hands to interact with it. The woman leans in towards the laptop, pointing at the screen with her right hand, indicating she might be explaining something or showing him something specific. Her facial expression suggests engagement and interest.  The background shows large windows with a view of a cityscape, indicating an urban setting. The lighting is bright, suggesting daytime with clear weather outside. The overall atmosphere appears casual and relaxed, with the two individuals comfortably interacting with each other and the laptop.  There is no significant camera movement; the shot remains static throughout the sequence, focusing on capturing the interaction between the two individuals and their shared activity on the laptop.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_3_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_3_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_3.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a French press coffee maker on a wooden surface, containing partially brewed coffee, and a blue and white striped mug with a heart design to its left. The background is blurred, suggesting a cozy indoor setting. A person's hand, wearing a blue sleeve, appears and presses down on the plunger of the French press, indicating the completion of the brewing process. The person then lifts the French press and pours the freshly brewed coffee into the mug, with the camera focusing on the pouring action. The coffee flows smoothly into the mug, filling it up. After pouring, the person places the French press back on the wooden surface next to the mug, which is now filled with coffee. The video concludes with a close-up of the filled mug and the French press, emphasizing the freshly brewed coffee and the cozy indoor setting.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_6_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_6_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_6.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up view of a wooden birdhouse with a black roof, set against a backdrop of green foliage and a wooden fence. A blue tit, a small bird with blue and yellow plumage, is seen peeking out from the entrance of the birdhouse. Initially, the bird's head is visible, and it appears to be looking around. As the video progresses, the bird gradually extends its body out of the entrance, revealing more of its blue and yellow feathers. The bird's movements are cautious and deliberate, suggesting it is assessing its surroundings. Throughout the video, the bird's position changes slightly, with its head and body moving in and out of the birdhouse. The background remains consistent, with the green foliage and wooden fence providing a natural setting for the birdhouse. The video captures the bird's interactions with its environment, highlighting its cautious behavior and the gradual exploration of its surroundings.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_8_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_8_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_8_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_8.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a person standing behind a table, dressed in a red robe with white cuffs, indicating a traditional or cultural setting. On the table, there is a brown clay teapot with a lid, a transparent glass pitcher filled with a golden liquid, and a small white cup with a blue pattern. The person's hands are initially resting on the table, near the teapot and the pitcher. The person then lifts the glass pitcher and pours the golden liquid into the white cup, suggesting the preparation of a beverage, likely tea. After pouring, the person places the pitcher back on the table and picks up the cup, bringing it to their mouth to drink. The background features a bamboo mat, reinforcing the traditional or cultural ambiance of the scene. The video captures a sequence of actions related to the preparation and consumption of a beverage, set against a backdrop that suggests a cultural or traditional context.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_18_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_18_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_18.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video showcases the process of frying French fries in a commercial kitchen setting. It begins with a close-up of a metal fryer basket filled with golden, crispy French fries being lifted out of a fryer by a person wearing white gloves. The basket is held above a stainless steel fryer, which contains more fries submerged in hot oil. The person tilts the basket to drain excess oil from the fries, allowing it to drip back into the fryer. This action is repeated several times to ensure all the oil is drained. The background is dimly lit, focusing the viewer's attention on the frying process. The video emphasizes the meticulous care taken in preparing the fries, highlighting the importance of draining excess oil for the perfect texture and taste.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_19_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_19_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_19.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video features a thingoid robot with a shiny metallic finish, standing against a plain white background. The robot is holding a cupcake with chocolate frosting and a yellow cherry on top in its right hand. Throughout the video, the robot maintains a static pose, with no movement or change in its position. The cupcake remains in the robot's hand, and there are no alterations in the robot's posture or the environment. The background remains consistently white, and there are no additional elements introduced into the scene. The camera angle and perspective do not change, providing a continuous, unaltered view of the robot and the cupcake.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_28_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_28_ref1.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_28.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a black analog alarm clock with a white face and black numbers, placed on a light-colored wooden floor. The clock shows the time as 10:10. The background features a blurred interior setting with a wooden structure on the left and a striped object on the right, possibly a piece of furniture or a curtain. The scene remains static, with no movement or changes in the environment. As the video progresses, the time on the clock changes to 10:11, indicating a minute has passed. The background and the position of the clock remain unchanged, maintaining the same static scene.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">multiobject</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/multiobject_23_ref0.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_23_ref1.jpg" alt="ref" loading="lazy"><img src="videos/s2v_ref/multiobject_23_ref2.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/multiobject_23.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video showcases a serene and static scene set on a wooden table. On the left side of the table, there is a plate filled with golden-brown, crescent-shaped cookies. To the right, a clear glass vase holds a bouquet of lilac flowers, adding a touch of natural beauty to the setting. In the foreground, a transparent glass teapot is seen pouring a golden liquid, presumably tea, into a matching glass cup. The pouring action is captured in detail, with the tea flowing smoothly from the teapot into the cup. Throughout the video, there are no significant changes or movements observed. The scene remains consistent, with the cookies, lilac flowers, and the act of pouring tea maintaining their positions and appearances. The camera angle and perspective do not change, providing a steady view of this tranquil moment.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singlehuman</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singlehuman_2_ref0.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singlehuman_2.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A man gently clutching a bouquet of vibrant flowers, his eyes radiating a serene contentment as he glances at the camera. His slightly upturned lips convey a sense of calm joy, accompanied by a faint twinkle in his eye. The scene is set in a lush garden, brimming with colorful blooms and verdant foliage, creating a tranquil haven. The shot captures him from the waist up, emphasizing his relaxed stance and the natural harmony of his surroundings.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_2_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_2.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a vintage camera resting on an old wooden desk, surrounded by scattered photographs. The camera zooms in to capture the details of the camera—its weathered leather, brass accents, and the glass lens catching the light. A hand gently picks up one of the photographs, flipping it over to reveal its back. The camera shifts focus between the photos and the camera, as the hand adjusts the camera’s settings with a soft click. As the hand places the photo back onto the desk, a slight breeze causes a few of the scattered photographs to shift, creating subtle motion in the scene. The soft sound of the camera’s dials and the faint rustle of paper add to the nostalgic atmosphere of the moment.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_5_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_5.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a street lamp, its warm glow casting soft light across the cobblestone street below. The camera slowly zooms out, revealing the lantern-style lamp against a dusky sky, with scattered clouds catching the last light of sunset. As the breeze stirs, the faint rustle of leaves can be heard, and the soft light from the lamp flickers slightly, casting changing shadows on the cobblestones. The camera moves gently around the scene, capturing the play of light and shadow, with the street lamp remaining the focal point. The distant sound of footsteps or faint city noise adds to the calm yet slightly mysterious atmosphere of the quiet evening.  background</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_7_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_7.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video opens with a close-up of a teddy bear sitting on a park bench, surrounded by vibrant autumn leaves scattered across the ground. The camera slowly zooms in on the teddy bear, capturing the soft texture of its fur as a gentle breeze causes a few leaves to flutter around it. The bear remains still, its button eyes reflecting the soft light of the autumn afternoon. Occasionally, a leaf lands on the bear's lap, adding a subtle motion to the otherwise calm scene. The sound of leaves rustling and the distant chirping of birds creates a peaceful atmosphere, with the teddy bear remaining the focal point of the tranquil park setting.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_13_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_13.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a beer can placed at the center of a circle made of international currencies—paper bills and coins from various countries. The camera slowly zooms out, capturing the can’s metallic surface and the intricate details of the surrounding money. As the camera moves, the currencies subtly shimmer, reflecting light, while the beer can remains the focal point. The sound of light ambient noise adds to the quiet significance of this global scene, emphasizing the connection between the beer can and its worldwide influence.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_25_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_25.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video begins with a close-up of a basketball shoe resting on a reflective surface, its vibrant, multicolored laces standing out against the sleek design. The camera slowly zooms in to capture the intricate details of the shoe—its texture, stitching, and the dynamic play of colors in the laces. As the camera pulls back, the reflections on the surface create an interesting visual effect, enhancing the shoe’s bold features. The video maintains focus on the shoe, emphasizing its design and energy, while subtle background sounds highlight the movement of the camera.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">singleobj</span></div>
+            <div class="ref-images-row"><img src="videos/s2v_ref/singleobj_23_ref0.jpg" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/s2v_res/singleobj_23.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">The video opens with a plush armchair positioned near a roaring fireplace, the warm glow from the flames casting soft light across the room. The camera slowly zooms in on the armchair, capturing its inviting cushions and rich fabric. As the fire crackles, a slight movement is seen in the armchair, as if someone just left it, leaving behind a faint impression in the cushions. The camera shifts to the flickering flames, then back to the chair, highlighting the contrast between the stillness of the armchair and the lively motion of the fire. The gentle crackling sound of the fire and the soft flicker of light create a warm, cozy atmosphere.</p></div>
+        </div>
+    </div>
+
+</section>
+
+<!-- ============ SECTION 5: Multi-Subject Generation ============ -->
+<div class="section-alt">
+<section class="section" id="multi-subject">
+    <h2 class="section-title">Multi-Subject Video Generation</h2>
+    <p class="section-subtitle">Generate videos featuring multiple subjects from reference images in a coherent scene.</p>
+    <div class="case-grid">
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">3-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_004_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_004_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_004_ref2.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000004.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A mouth-watering slow-pan across a rustic wooden diner table. Image-1 sits center stage, steaming slightly. Next to it, Image-2 is piled high, and in the background, Image-3 catches the neon lights of the diner window. The camera slowly pushes in, emphasizing the textures and juicy details of the meal.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">3-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_005_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_005_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_005_ref2.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000005.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A warm, inviting living room scene at twilight. Image-1 sits elegantly on top of Image-3. Beside the chair, Image-2 casts a warm, soft yellow glow over the velvet fabric. The camera slowly arcs around the setup, highlighting the rich textures and cozy atmosphere of the home.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">3-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_008_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_008_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_008_ref2.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000008.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A moody, dimly lit jazz club stage. A musician is passionately playing Image-1, plugged directly into Image-2 which vibrates slightly with the bass. In the foreground, Image-3 stands ready, catching the dramatic blue and purple stage lights. Slow panning shot capturing the live music energy.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">4-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_010_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_010_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_010_ref2.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_010_ref3.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000010.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A slick, high-end commercial video. Image-1 is walking purposefully through a modern glass-walled office lobby. He is wearing Image-2 impeccably. As he checks the time, the camera does a macro zoom on Image-3 on his wrist, before cutting to a low-angle tracking shot of Image-4 clicking rhythmically on the marble floor.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">4-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_012_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_012_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_012_ref2.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_012_ref3.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000012.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A luxurious sunlit living room. Image-1, wearing the sparkling Image-4 around its neck, steps gracefully out of Image-2. The cat stretches lazily, then walks over to Image-3 to eat. The camera follows at floor level with a shallow depth of field, highlighting the cat's majestic fur.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">4-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_013_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_013_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_013_ref2.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_013_ref3.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000013.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">An architectural interior design video. The camera slowly pans across a chic dining space, showing Image-1 surrounded by four of Image-2. In the center of the table sits Image-3, adding verticality to the space. On the wall behind the setup, Image-4 hangs perfectly centered, completing the modern aesthetic.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">5-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_016_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_016_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_016_ref2.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_016_ref3.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_016_ref4.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000016.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A wide, sweeping drone shot dropping down into a sun-drenched park. Image-4 is spread out on the green grass. Image-1 and Image-2 are sitting on it, laughing together as they unpack fresh fruit from Image-3. Beside them, Image-5 wags its tail excitedly, hoping for a treat. The scene is bright, happy, and cinematic.</p></div>
+        </div>
+
+        <div class="case-card" data-orientation="landscape">
+            <div class="card-header"><span class="badge badge-gen">5-subject</span></div>
+            <div class="ref-images-row"><img src="videos/multi_ref/case_017_ref0.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_017_ref1.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_017_ref2.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_017_ref3.png" alt="ref" loading="lazy"><img src="videos/multi_ref/case_017_ref4.png" alt="ref" loading="lazy"></div>
+            <div class="single-video-wrap"><video muted loop playsinline preload="none" controls><source src="videos/multi_res/000017.mp4" type="video/mp4"></video></div>
+            <div class="card-body"><p class="prompt-text">A mouth-watering macro video sequence in a bright kitchen. Image-1 sits in the center of the frame. A hand slowly pours Image-2 over the stack in slow motion, the syrup cascading beautifully. Image-3 is scattered artistically around the plate. To the side sits Image-4, steam rising into the morning light. Finally, a hand picks up Image-5 and cuts into the fluffy stack.</p></div>
+        </div>
+    </div>
+
+</section>
+</div>
+
+<!-- ============ BIBTEX ============ -->
+<section class="section" id="bibtex">
+    <h2 class="section-title">Citation</h2>
+    <div class="bibtex-wrapper" style="position:relative; max-width:700px; margin:20px auto 0;">
+        <button class="copy-btn" onclick="copyBibtex()" style="position:absolute; top:10px; right:10px; padding:4px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.1); color:#94a3b8; cursor:pointer; font-size:12px; backdrop-filter:blur(4px); transition: all 0.2s; display:flex; align-items:center; gap:6px;"><i class="fas fa-copy"></i> Copy</button>
+        <pre class="bibtex-code" style="background:#1e293b; color:#e2e8f0; padding:20px 24px; border-radius:10px; font-size:0.85rem; line-height:1.6; overflow-x:auto; border:1px solid #334155;">@article{liu2026tide,
+  title={TIDE: Task-Isolated Diffusion for Unified Video Editing and Generation},
+  author={Liu, Qi and Yue, Gang and Yin, Mingyu and Zhang, Lisai and Wu, Yidi
+          and Wang, Yaole and Wang, Yaohui and Yao, Chang and Chen, Jingyuan and Ma, Lin},
+  journal={arXiv preprint arXiv:2606.08260},
+  year={2026}
+}</pre>
+    </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+    <p>&copy; 2026 TIDE Authors.</p>
+</footer>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+(function() {
+    'use strict';
+
+    /* ---------- Copy BibTeX ---------- */
+    window.copyBibtex = function() {
+        const text = document.querySelector('.bibtex-code').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 2000);
+        });
+    };
+
+    /* ---------- Video Comparison Slider (wrapper-based) ---------- */
+    document.querySelectorAll('.video-compare').forEach(container => {
+        const sliderLine = container.querySelector('.slider-line');
+        const sliderHandle = container.querySelector('.slider-handle');
+        const sourceWrapper = container.querySelector('.source-wrapper');
+        const sourceVideo = sourceWrapper ? sourceWrapper.querySelector('video') : null;
+        let isDragging = false;
+
+        // Set source video width to match container (not wrapper)
+        function fixSourceWidth() {
+            if (sourceVideo) {
+                sourceVideo.style.width = container.offsetWidth + 'px';
+            }
+        }
+        fixSourceWidth();
+        window.addEventListener('resize', fixSourceWidth);
+
+        function setPosition(pct) {
+            pct = Math.max(0, Math.min(100, pct));
+            sliderLine.style.left = pct + '%';
+            sliderHandle.style.left = pct + '%';
+            if (sourceWrapper) {
+                sourceWrapper.style.width = pct + '%';
+            }
+        }
+
+        function getPercent(clientX) {
+            const rect = container.getBoundingClientRect();
+            return ((clientX - rect.left) / rect.width) * 100;
+        }
+
+        container.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            isDragging = true;
+            setPosition(getPercent(e.clientX));
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            setPosition(getPercent(e.clientX));
+        });
+        document.addEventListener('mouseup', function() { isDragging = false; });
+
+        container.addEventListener('touchstart', function(e) {
+            isDragging = true;
+            setPosition(getPercent(e.touches[0].clientX));
+        }, { passive: true });
+        container.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            setPosition(getPercent(e.touches[0].clientX));
+        }, { passive: false });
+        container.addEventListener('touchend', function() { isDragging = false; });
+    });
+
+    /* ---------- IntersectionObserver: auto-play/pause ---------- */
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const videos = entry.target.querySelectorAll('video');
+            if (entry.isIntersecting) {
+                videos.forEach(v => v.play().catch(() => {}));
+            } else {
+                videos.forEach(v => { v.pause(); v.currentTime = 0; });
+            }
+        });
+    }, { threshold: 0.25 });
+
+    document.querySelectorAll('.case-card').forEach(card => observer.observe(card));
+
+    /* ---------- Sync paired videos ---------- */
+    document.querySelectorAll('.video-compare').forEach(container => {
+        const videos = container.querySelectorAll('video');
+        if (videos.length < 2) return;
+        const [result, source] = videos;
+
+        function sync(leader, follower) {
+            if (Math.abs(leader.currentTime - follower.currentTime) > 0.15) {
+                follower.currentTime = leader.currentTime;
+            }
+        }
+
+        result.addEventListener('play', () => source.play().catch(() => {}));
+        result.addEventListener('pause', () => source.pause());
+        source.addEventListener('play', () => result.play().catch(() => {}));
+        source.addEventListener('pause', () => result.pause());
+
+        setInterval(() => {
+            if (!result.paused && !source.paused) sync(result, source);
+        }, 500);
+    });
+
+    /* ---------- Fix source widths on tab/window visibility change ---------- */
+    document.addEventListener('visibilitychange', () => {
+        document.querySelectorAll('.video-compare').forEach(c => {
+            const sw = c.querySelector('.source-wrapper');
+            const sv = sw ? sw.querySelector('video') : null;
+            if (sv) sv.style.width = c.offsetWidth + 'px';
+        });
+    });
+
+})();
+</script>
+
+</body>
+</html>
