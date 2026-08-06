@@ -1,0 +1,65 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare lightweight site
+        env:
+          SITE_DIR: ${{ runner.temp }}/site
+        run: |
+          mkdir -p "$SITE_DIR"
+          tar \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./tide/media' \
+            -cf - . | tar -xf - -C "$SITE_DIR"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          index = Path(os.environ["SITE_DIR"]) / "tide" / "index.html"
+          cdn = (
+              "https://cdn.jsdelivr.net/gh/"
+              f"{os.environ['GITHUB_REPOSITORY']}@{os.environ['GITHUB_SHA']}/"
+              "tide/media/"
+          )
+          content = index.read_text(encoding="utf-8")
+          index.write_text(content.replace("media/", cdn), encoding="utf-8")
+          PY
+          touch "$SITE_DIR/.nojekyll"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
